@@ -2,8 +2,8 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/c1d8bc8b-4a35-486a-8369-fd28053291a1
-
+**URL**: learn-2-earn-git-main-yash-sharmas-projects-a70f5977.vercel.app
+**URL**: learn-2-earn.vercel.app
 ## How can I edit this code?
 Follow these steps:
 
