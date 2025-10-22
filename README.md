@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to Learn-2-EARN
 
 ## Project info
 
