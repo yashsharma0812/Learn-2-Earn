@@ -1,8 +1,11 @@
 # Welcome to Learn-2-EARN
-learn-2-earn.vercel.app
-## Project info
-**URL**: learn-2-earn-git-main-yash-sharmas-projects-a70f5977.vercel.app
+Learn2Earn is a platform that allows users to gain knowledge while earning rewards.
+It offers educational content, quizzes, and challenges across various topics.
+Users earn points or tokens for completing learning activities, which can be redeemed.
+The platform motivates continuous learning by combining education with tangible incentives.
 
+## Project info
+**URL**: https://learn-2-earn.vercel.app/
 ## How can I edit this code?
 Follow these steps:
 
