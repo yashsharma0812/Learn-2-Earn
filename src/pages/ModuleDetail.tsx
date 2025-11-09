@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,63 +13,52 @@ import confetti from "canvas-confetti";
 
 const ModuleDetail = () => {
   const { id } = useParams();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [module, setModule] = useState<any>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
+    // Mock module data based on id
+    const mockModules: any = {
+      '1': {
+        id: '1',
+        title: 'Introduction to Web Development',
+        description: 'Learn the basics of HTML, CSS, and JavaScript',
+        difficulty: 'Beginner',
+        points: 100,
+        quiz_question: 'What does HTML stand for?',
+        quiz_options: ['Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlinks and Text Markup Language'],
+        correct_answer: 0
+      },
+      '2': {
+        id: '2',
+        title: 'React Fundamentals',
+        description: 'Master the fundamentals of React.js',
+        difficulty: 'Intermediate',
+        points: 150,
+        quiz_question: 'What is JSX?',
+        quiz_options: ['A JavaScript extension', 'A template engine', 'A styling framework', 'A database'],
+        correct_answer: 0
+      },
+      '3': {
+        id: '3',
+        title: 'Backend with Node.js',
+        description: 'Build powerful backends with Node.js and Express',
+        difficulty: 'Intermediate',
+        points: 200,
+        quiz_question: 'What is Express.js?',
+        quiz_options: ['A fast delivery service', 'A Node.js web framework', 'A database', 'A frontend library'],
+        correct_answer: 1
       }
-      setUser(session.user);
-      fetchModuleData(session.user.id);
     };
-
-    checkAuth();
-  }, [id, navigate]);
-
-  const fetchModuleData = async (userId: string) => {
-    try {
-      // Fetch module
-      const { data: moduleData, error: moduleError } = await supabase
-        .from("modules")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (moduleError) throw moduleError;
-      setModule(moduleData);
-
-      // Check if completed
-      const { data: progressData } = await supabase
-        .from("user_progress")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("module_id", id)
-        .eq("completed", true)
-        .maybeSingle();
-
-      setIsCompleted(!!progressData);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load module",
-        variant: "destructive",
-      });
-      navigate("/modules");
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+    setModule(mockModules[id || '1'] || mockModules['1']);
+  }, [id]);
 
   const handleSubmitQuiz = async () => {
     if (!selectedAnswer) {
@@ -86,33 +75,8 @@ const ModuleDetail = () => {
     setShowResult(true);
 
     if (correct && !isCompleted) {
-      // Award points and mark as complete
-      try {
-        // Update user points
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("points")
-          .eq("id", user.id)
-          .single();
-
-        const newPoints = (profileData?.points || 0) + module.points_reward;
-
-        await supabase
-          .from("profiles")
-          .update({ points: newPoints })
-          .eq("id", user.id);
-
-        // Mark module as complete
-        await supabase
-          .from("user_progress")
-          .upsert({
-            user_id: user.id,
-            module_id: module.id,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          });
-
-        setIsCompleted(true);
+      // Mock completion - in real app, this would call your backend API
+      setIsCompleted(true);
 
         // Celebrate!
         confetti({

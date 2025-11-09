@@ -1,92 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, BookOpen, Gift, Calendar, CheckCircle2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 const Profile = () => {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user } = useAuth();
   const [completedModules, setCompletedModules] = useState<any[]>([]);
   const [redeemedVouchers, setRedeemedVouchers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-      fetchProfileData(session.user.id);
-    };
+    // Mock data for now
+    setCompletedModules([]);
+    setRedeemedVouchers([]);
+  }, []);
 
-    checkAuth();
-  }, [navigate]);
 
-  const fetchProfileData = async (userId: string) => {
-    try {
-      // Fetch profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      setProfile(profileData);
-
-      // Fetch completed modules
-      const { data: progressData } = await supabase
-        .from("user_progress")
-        .select(`
-          *,
-          modules:module_id (*)
-        `)
-        .eq("user_id", userId)
-        .eq("completed", true)
-        .order("completed_at", { ascending: false });
-
-      setCompletedModules(progressData || []);
-
-      // Fetch redeemed vouchers
-      const { data: redeemedData } = await supabase
-        .from("redeemed_vouchers")
-        .select(`
-          *,
-          vouchers:voucher_id (*)
-        `)
-        .eq("user_id", userId)
-        .order("redeemed_at", { ascending: false });
-
-      setRedeemedVouchers(redeemedData || []);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load profile data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -100,9 +31,9 @@ const Profile = () => {
                 <Trophy className="h-12 w-12 text-white" />
               </div>
               <div>
-                <CardTitle className="text-3xl">{profile?.username}</CardTitle>
+                <CardTitle className="text-3xl">{user?.username}</CardTitle>
                 <CardDescription className="text-base">
-                  Member since {format(new Date(profile?.created_at), "MMMM yyyy")}
+                  {user?.email}
                 </CardDescription>
               </div>
             </div>
@@ -112,7 +43,7 @@ const Profile = () => {
               <div className="text-center p-4 rounded-lg bg-accent/10">
                 <Trophy className="h-8 w-8 text-accent mx-auto mb-2" />
                 <div className="text-3xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-                  {profile?.points || 0}
+                  {user?.points || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Points</div>
               </div>
