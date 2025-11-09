@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,67 +9,41 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 
 const Rewards = () => {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user } = useAuth();
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [redeemedVouchers, setRedeemedVouchers] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
+    // Mock vouchers data
+    const mockVouchers = [
+      {
+        id: '1',
+        title: '$10 Amazon Gift Card',
+        description: 'Redeem for Amazon shopping',
+        cost_points: 500,
+        available_quantity: 10
+      },
+      {
+        id: '2',
+        title: '$25 Starbucks Gift Card',
+        description: 'Enjoy your favorite coffee',
+        cost_points: 1000,
+        available_quantity: 5
+      },
+      {
+        id: '3',
+        title: '$50 Udemy Course Voucher',
+        description: 'Learn new skills',
+        cost_points: 2000,
+        available_quantity: 3
       }
-      setUser(session.user);
-      fetchRewardsData(session.user.id);
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  const fetchRewardsData = async (userId: string) => {
-    try {
-      // Fetch profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      setProfile(profileData);
-
-      // Fetch vouchers
-      const { data: vouchersData } = await supabase
-        .from("vouchers")
-        .select("*")
-        .order("cost_points");
-
-      setVouchers(vouchersData || []);
-
-      // Fetch redeemed vouchers
-      const { data: redeemedData } = await supabase
-        .from("redeemed_vouchers")
-        .select("voucher_id")
-        .eq("user_id", userId);
-
-      setRedeemedVouchers(new Set(redeemedData?.map((r) => r.voucher_id) || []));
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load rewards",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    ];
+    setVouchers(mockVouchers);
+  }, []);
 
   const handleRedeem = async (voucher: any) => {
-    if (!profile || profile.points < voucher.cost_points) {
+    if (!user || (user.points || 0) < voucher.cost_points) {
       toast({
         title: "Insufficient Points",
         description: `You need ${voucher.cost_points} points to redeem this voucher. Keep learning!`,
@@ -80,21 +53,7 @@ const Rewards = () => {
     }
 
     try {
-      // Deduct points
-      const newPoints = profile.points - voucher.cost_points;
-      await supabase
-        .from("profiles")
-        .update({ points: newPoints })
-        .eq("id", user.id);
-
-      // Add to redeemed vouchers
-      await supabase.from("redeemed_vouchers").insert({
-        user_id: user.id,
-        voucher_id: voucher.id,
-      });
-
-      // Update local state
-      setProfile({ ...profile, points: newPoints });
+      // Mock redeem - in real app, this would call your backend API
       setRedeemedVouchers(new Set([...redeemedVouchers, voucher.id]));
 
       // Celebrate!
@@ -117,16 +76,7 @@ const Rewards = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -147,7 +97,7 @@ const Rewards = () => {
                   <div>
                     <div className="text-sm text-muted-foreground">Your Points</div>
                     <div className="text-2xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-                      {profile?.points || 0}
+                      {user?.points || 0}
                     </div>
                   </div>
                 </div>
@@ -159,7 +109,7 @@ const Rewards = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vouchers.map((voucher) => {
             const isRedeemed = redeemedVouchers.has(voucher.id);
-            const canAfford = profile && profile.points >= voucher.cost_points;
+            const canAfford = user && (user.points || 0) >= voucher.cost_points;
 
             return (
               <Card

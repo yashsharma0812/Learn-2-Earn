@@ -1,85 +1,61 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, CheckCircle2, Trophy } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const Modules = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [modules, setModules] = useState<any[]>([]);
   const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-      fetchModules(session.user.id);
-    };
+    fetchModules();
+  }, []);
 
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const fetchModules = async (userId: string) => {
+  const fetchModules = async () => {
     try {
-      // Fetch all modules
-      const { data: modulesData, error: modulesError } = await supabase
-        .from("modules")
-        .select("*")
-        .order("order_index");
+      // Mock modules data for now
+      const mockModules = [
+        {
+          id: '1',
+          title: 'Introduction to Web Development',
+          description: 'Learn the basics of HTML, CSS, and JavaScript',
+          difficulty: 'Beginner',
+          points: 100,
+          order_index: 1
+        },
+        {
+          id: '2',
+          title: 'React Fundamentals',
+          description: 'Master the fundamentals of React.js',
+          difficulty: 'Intermediate',
+          points: 150,
+          order_index: 2
+        },
+        {
+          id: '3',
+          title: 'Backend with Node.js',
+          description: 'Build powerful backends with Node.js and Express',
+          difficulty: 'Intermediate',
+          points: 200,
+          order_index: 3
+        }
+      ];
 
-      if (modulesError) throw modulesError;
-
-      // Fetch user progress
-      const { data: progressData, error: progressError } = await supabase
-        .from("user_progress")
-        .select("module_id")
-        .eq("user_id", userId)
-        .eq("completed", true);
-
-      if (progressError) throw progressError;
-
-      setModules(modulesData || []);
-      setCompletedModules(new Set(progressData?.map((p) => p.module_id) || []));
+      setModules(mockModules);
+      setCompletedModules(new Set());
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load modules",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      console.error('Failed to load modules:', error);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-hero">
