@@ -138,7 +138,7 @@ const ModuleDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Navigation user={user} />
+        <Navigation />
         <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -152,7 +152,7 @@ const ModuleDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <Navigation user={user} />
+      <Navigation />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Button variant="ghost" onClick={() => navigate("/modules")} className="mb-4">
           ← Back to Modules
