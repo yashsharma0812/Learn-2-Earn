@@ -1,33 +1,22 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, LayoutDashboard, BookOpen, Gift, User, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-interface NavigationProps {
-  user?: any;
-}
-
-const Navigation = ({ user }: NavigationProps) => {
+const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, logout } = useAuth();
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Signed out",
-        description: "You've been successfully signed out",
-      });
-      navigate("/");
-    }
+  const handleSignOut = () => {
+    logout();
+    toast({
+      title: "Signed out",
+      description: "You've been successfully signed out",
+    });
+    navigate("/");
   };
 
   const navItems = user
